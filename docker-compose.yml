@@ -2,17 +2,19 @@ version: '3.9'
 
 services:
   auth_service:
-    container_name: auth_service
+#    container_name: auth_service
     build:
       context: auth_service
       dockerfile: ./Dockerfile
-    restart: always
-    networks:
-      - backend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
       - .:/app/
+    links:
+      - mongo
+    depends_on:
+      - mongo
     environment:
       - GIN_MODE=release
       - ENV=production
@@ -20,16 +22,16 @@ services:
       - MONGODB_URI=mongodb://mongo/places_cache?authSource=admin
 
   places_service:
-    container_name: places_name
+#    container_name: places_service
     build:
       context: places_service
       dockerfile: ./Dockerfile
-    restart: always
-    networks:
-      - backend
+    restart: unless-stopped
     depends_on:
       - mongo
       - auth_service
+    links:
+      - mongo
     ports:
       - "3001:3000"
     volumes:
@@ -41,13 +43,11 @@ services:
       - MONGODB_URI=mongodb://mongo/places_cache?authSource=admin
 
   direction_service:
-    container_name: direction_service
+#    container_name: direction_service
     build:
       context: direction_service
       dockerfile: ./Dockerfile
-    restart: always
-    networks:
-      - backend
+    restart: unless-stopped
     depends_on:
       - mongo
       - auth_service
@@ -62,13 +62,11 @@ services:
       - MONGODB_URI=mongodb://mongo/places_cache?authSource=admin
 
   matrix_service:
-    container_name: matrix_service
+#    container_name: matrix_service
     build:
       context: matrix_service
       dockerfile: ./Dockerfile
-    restart: always
-    networks:
-      - backend
+    restart: unless-stopped
     depends_on:
       - mongo
       - auth_service
@@ -83,13 +81,11 @@ services:
       - MONGODB_URI=mongodb://mongo/places_cache?authSource=admin
 
   reverse_service:
-    container_name: reverse_service
+#    container_name: reverse_service
     build:
       context: reverse_service
       dockerfile: ./Dockerfile
-    restart: always
-    networks:
-      - backend
+    restart: unless-stopped
     depends_on:
       - mongo
       - auth_service
@@ -113,7 +109,7 @@ services:
       - myMongoCache:/var/lib/mongo
     ports:
       - '27017:27017'
-    restart: always
+    restart: unless-stopped
 
   graphhopper:
     container_name: graphhopper
@@ -122,7 +118,7 @@ services:
       - ./ASSETS/data:/data
       - ./ASSETS/:/usr/src/app
     ports:
-      - 11111:8989
+      - "11111:8989"
     entrypoint: ./graphhopper.sh -c /usr/src/app/gh-config.yml
     command: -i /data/rwanda-latest.osm.pbf
     restart: unless-stopped
@@ -136,8 +132,8 @@ services:
       NOMINATIM_PASSWORD: 'very_secure_password'
       IMPORT_WIKIPEDIA: 'false'
     ports:
-      - 5432:5432
-      - 7070:8080
+      - "5432:5432"
+      - "7070:8080"
     restart: unless-stopped
     volumes:
       - ./ASSETS/data:/data
@@ -151,22 +147,47 @@ services:
     volumes:
       - ./ASSETS/photon/data:/photon/photon_data
     ports:
-      - 2322:2322
+      - "2322:2322"
     depends_on:
       - nominatim
     links:
-      - "nominatim"
+      - nominatim
     restart: unless-stopped
     environment:
       PHOTON_OPTS: '-host nominatim -port 5432 -database nominatim -user nominatim -password very_secure_password'
       JAVA_OPTS: ''
 
-  restarter:
-    container_name: restarter
-    image: docker
-    volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
-    command: [ "/bin/sh", "-c", "while true; do sleep 86400; docker restart mongo; done" ]
-    restart: unless-stopped
+  proxy:
+    image: nginx:latest
+#    restart: unless-stopped
+    depends_on:
+      - places_service
+      - reverse_service
+      - matrix_service
+      - direction_service
+    links:
+      - places_service
+      - reverse_service
+      - matrix_service
+      - direction_service
+    volumes:
+      - ./NGINX/conf/sites-available:/etc/nginx/sites-available
+      - ./NGINX/conf/sites-enabled:/etc/nginx/sites-enabled
+      - ./NGINX/conf/conf.d:/etc/nginx/conf.d
+      - ./NGINX/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./NGINX/conf/common:/etc/nginx/common
+      - ./NGINX/certs:/etc/nginx/certs
+      - ./NGINX/logs:/var/log/nginx
+    ports:
+      - "8080:80"
+      - "443:443"
+
+#  restarter:
+#    container_name: restarter
+#    image: docker
+#    volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
+#    command: [ "/bin/sh", "-c", "while true; do sleep 86400; docker restart mongo; done" ]
+#    restart: unless-stopped
 
 volumes:
   myOSM:

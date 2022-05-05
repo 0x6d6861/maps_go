@@ -1,7 +1,7 @@
 FROM golang:1.17.0-alpine AS builder
 
 # RUN apk --no-cache add gcc g++ make git
-RUN apk add upx
+#RUN apk add upx
 
 # Set necessary environmet variables needed for our image
 ENV GO111MODULE=on \
@@ -23,7 +23,7 @@ COPY . .
 RUN go build -o main .
 
 # Compress the build
-RUN upx ./main
+#RUN upx ./main
 
 # Move to /dist directory as the place for resulting binary folder
 WORKDIR /dist
@@ -36,6 +36,8 @@ FROM scratch
 MAINTAINER heri@heri.co
 
 COPY --from=builder /dist/main /
+
+EXPOSE 3000
 
 # Command to run
 ENTRYPOINT ["/main"]

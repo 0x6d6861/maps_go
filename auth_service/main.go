@@ -4,7 +4,6 @@ import (
 	"auth_service/Controllers"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"log"
 )
 
 func init() {
@@ -12,7 +11,7 @@ func init() {
 	err := godotenv.Load(".env")
 
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		//log.Fatal("Error loading .env file")
 	}
 }
 
@@ -32,6 +31,6 @@ func main() {
 
 	}
 
-	router.Run(":3001") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	router.Run(":3000") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 
 }
