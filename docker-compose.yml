@@ -4,13 +4,11 @@ services:
   auth_service:
 #    container_name: auth_service
     build:
-      context: auth_service
-      dockerfile: ./Dockerfile
+      context: ./auth_service
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "3000:3000"
-    volumes:
-      - .:/app/
     links:
       - mongo
     depends_on:
@@ -24,8 +22,8 @@ services:
   places_service:
 #    container_name: places_service
     build:
-      context: places_service
-      dockerfile: ./Dockerfile
+      context: ./places_service
+      dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
       - mongo
@@ -34,8 +32,6 @@ services:
       - mongo
     ports:
       - "3001:3000"
-    volumes:
-      - .:/app/
     environment:
       - GIN_MODE=release
       - ENV=production
@@ -45,16 +41,14 @@ services:
   direction_service:
 #    container_name: direction_service
     build:
-      context: direction_service
-      dockerfile: ./Dockerfile
+      context: ./direction_service
+      dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
       - mongo
       - auth_service
     ports:
       - "3002:3000"
-    volumes:
-      - .:/app/
     environment:
       - GIN_MODE=release
       - ENV=production
@@ -64,16 +58,14 @@ services:
   matrix_service:
 #    container_name: matrix_service
     build:
-      context: matrix_service
-      dockerfile: ./Dockerfile
+      context: ./matrix_service
+      dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
       - mongo
       - auth_service
     ports:
       - "3003:3000"
-    volumes:
-      - .:/app/
     environment:
       - GIN_MODE=release
       - ENV=production
@@ -83,16 +75,14 @@ services:
   reverse_service:
 #    container_name: reverse_service
     build:
-      context: reverse_service
-      dockerfile: ./Dockerfile
+      context: ./reverse_service
+      dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
       - mongo
       - auth_service
     ports:
       - "3004:3000"
-    volumes:
-      - .:/app/
     environment:
       - GIN_MODE=release
       - ENV=production
