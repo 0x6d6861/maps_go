@@ -1,0 +1,25 @@
+### Get messages report
+GET http://localhost:8080/v1/api/report
+Accept: application/json
+
+### Send POST request with json body
+POST http://localhost:8080/v1/api/
+Content-Type: application/json
+
+{
+  "senderId": "LittleApp",
+  "batchId": "225_1620393073210",
+  "message": "Hello test from Heri - testing SMS API from little",
+  "messages": [
+    {
+      "to": "254772369355",
+      "message": "Hello world!"
+    }
+  ],
+  "numbers": [
+    "+254700928129"
+  ],
+  "apiId": 225,
+  "companyId": 1,
+  "callback": "https://sms.little.bz/reports/callback/"
+}

@@ -1,0 +1,175 @@
+version: '3.9'
+
+services:
+  auth_service:
+    container_name: auth_service
+    build:
+      context: auth_service
+      dockerfile: ./Dockerfile
+    restart: always
+    networks:
+      - backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app/
+    environment:
+      - GIN_MODE=release
+      - ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo/places_cache?authSource=admin
+
+  places_service:
+    container_name: places_name
+    build:
+      context: places_service
+      dockerfile: ./Dockerfile
+    restart: always
+    networks:
+      - backend
+    depends_on:
+      - mongo
+      - auth_service
+    ports:
+      - "3001:3000"
+    volumes:
+      - .:/app/
+    environment:
+      - GIN_MODE=release
+      - ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo/places_cache?authSource=admin
+
+  direction_service:
+    container_name: direction_service
+    build:
+      context: direction_service
+      dockerfile: ./Dockerfile
+    restart: always
+    networks:
+      - backend
+    depends_on:
+      - mongo
+      - auth_service
+    ports:
+      - "3002:3000"
+    volumes:
+      - .:/app/
+    environment:
+      - GIN_MODE=release
+      - ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo/places_cache?authSource=admin
+
+  matrix_service:
+    container_name: matrix_service
+    build:
+      context: matrix_service
+      dockerfile: ./Dockerfile
+    restart: always
+    networks:
+      - backend
+    depends_on:
+      - mongo
+      - auth_service
+    ports:
+      - "3003:3000"
+    volumes:
+      - .:/app/
+    environment:
+      - GIN_MODE=release
+      - ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo/places_cache?authSource=admin
+
+  reverse_service:
+    container_name: reverse_service
+    build:
+      context: reverse_service
+      dockerfile: ./Dockerfile
+    restart: always
+    networks:
+      - backend
+    depends_on:
+      - mongo
+      - auth_service
+    ports:
+      - "3004:3000"
+    volumes:
+      - .:/app/
+    environment:
+      - GIN_MODE=release
+      - ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo/places_cache?authSource=admin
+
+  mongo:
+    container_name: mongo
+    image: 'mongo:latest'
+    environment:
+      - MONGO_DATA_DIR=/var/lib/mongo
+      - MONGO_LOG_DIR=/dev/null
+    volumes:
+      - myMongoCache:/var/lib/mongo
+    ports:
+      - '27017:27017'
+    restart: always
+
+  graphhopper:
+    container_name: graphhopper
+    image: israelhikingmap/graphhopper:latest
+    volumes:
+      - ./ASSETS/data:/data
+      - ./ASSETS/:/usr/src/app
+    ports:
+      - 11111:8989
+    entrypoint: ./graphhopper.sh -c /usr/src/app/gh-config.yml
+    command: -i /data/rwanda-latest.osm.pbf
+    restart: unless-stopped
+
+  nominatim:
+    container_name: nominatim
+    image: mediagis/nominatim:4.0
+    environment:
+      REPLICATION_URL: 'https://download.geofabrik.de/africa/rwanda-updates/'
+      PBF_PATH: '/data/rwanda-latest.osm.pbf'
+      NOMINATIM_PASSWORD: 'very_secure_password'
+      IMPORT_WIKIPEDIA: 'false'
+    ports:
+      - 5432:5432
+      - 7070:8080
+    restart: unless-stopped
+    volumes:
+      - ./ASSETS/data:/data
+      - myOSM:/var/lib/postgresql/12/main
+
+  photon:
+    container_name: photon
+    build:
+      context: ./ASSETS/photon
+      dockerfile: Dockerfile
+    volumes:
+      - ./ASSETS/photon/data:/photon/photon_data
+    ports:
+      - 2322:2322
+    depends_on:
+      - nominatim
+    links:
+      - "nominatim"
+    restart: unless-stopped
+    environment:
+      PHOTON_OPTS: '-host nominatim -port 5432 -database nominatim -user nominatim -password very_secure_password'
+      JAVA_OPTS: ''
+
+  restarter:
+    container_name: restarter
+    image: docker
+    volumes: [ "/var/run/docker.sock:/var/run/docker.sock" ]
+    command: [ "/bin/sh", "-c", "while true; do sleep 86400; docker restart mongo; done" ]
+    restart: unless-stopped
+
+volumes:
+  myOSM:
+  myMongoCache:
+
+  # https://github.com/mediagis/nominatim-docker/tree/master/4.0
