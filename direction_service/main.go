@@ -19,12 +19,12 @@ func main() {
 
 	router := gin.Default()
 
-	v2 := router.Group("/v2")
+	direction := router.Group("/direction")
 	{
 		//Controllers.HomeController(api)
-		direction := v2.Group("/direction")
+		v2 := direction.Group("/v2")
 		{
-			Controllers.HomeController(direction)
+			Controllers.HomeController(v2)
 
 		}
 

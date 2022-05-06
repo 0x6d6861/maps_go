@@ -29,12 +29,12 @@ func main() {
 
 	// router.Use(Middleware.HasKey())
 
-	v1 := router.Group("/v3")
+	places := router.Group("/places")
 	{
-		places := v1.Group("/places")
+		v3 := places.Group("/v3")
 		{
 			//Controllers.HomeController(api)
-			Controllers.PlacesController(places)
+			Controllers.PlacesController(v3)
 		}
 
 	}

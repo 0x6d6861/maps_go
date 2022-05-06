@@ -6,12 +6,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
-//var osUri = os.Getenv("MONGODB_URI")
+var osUri = os.Getenv("MONGODB_URI")
 
-var osUri = "mongodb://localhost:27017/places_cache?authSource=admin"
+//var osUri = "mongodb://localhost:27017/places_cache?authSource=admin"
 
 var DatabaseInstance = NewMongoDatabase(
 	osUri,

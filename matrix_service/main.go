@@ -24,8 +24,10 @@ func main() {
 
 	matrix := router.Group("/matrix")
 	{
-		//Controllers.HomeController(api)
-		Controllers.HomeController(matrix)
+		v1 := matrix.Group("/v1")
+		{
+			Controllers.HomeController(v1)
+		}
 
 	}
 
