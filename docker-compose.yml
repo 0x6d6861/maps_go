@@ -103,7 +103,7 @@ services:
 
   graphhopper:
     container_name: graphhopper
-    image: israelhikingmap/graphhopper:latest
+    image: israelhikingmap/graphhopper:5.1
     volumes:
       - ./ASSETS/data:/data
       - ./ASSETS/:/usr/src/app
